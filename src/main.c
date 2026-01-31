@@ -57,14 +57,13 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-                if (event.button.button == SDL_BUTTON_LEFT) {
-                    float mouse_x = event.button.x;
-                    float mouse_y = event.button.y;
-
-                    int col = mouse_x / CELL_SIZE;
-                    int row = mouse_y / CELL_SIZE;
-                    
+            float mouse_x, mouse_y;
+            Uint32 buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+            if (buttons & SDL_BUTTON_LMASK) {
+                int col = mouse_x / CELL_SIZE;
+                int row = mouse_y / CELL_SIZE;
+                
+                if (row < ROWS && row >= 0 && col < COLUMNS && col >= 0) {
                     if (current_type == 1) {
                         grid[row][col] = WALL;
                     } else if(current_type == 2) {
