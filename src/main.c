@@ -12,6 +12,16 @@ typedef enum {
     SAND
 } CellType;
 
+struct {
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+
+    CellType grid[ROWS][COLUMNS];
+    int current_type;
+    bool running;
+} state;
+
+void clear_grid(CellType grid[ROWS][COLUMNS]);
 void update_grid(CellType grid[ROWS][COLUMNS]);
 
 int main(int argc, char *argv[]) {
@@ -22,38 +32,38 @@ int main(int argc, char *argv[]) {
 
     int width = CELL_SIZE * COLUMNS;
     int height = CELL_SIZE * ROWS;
-    SDL_Window *window = SDL_CreateWindow("SANDbox", width, height, 0);
-    if (!window) {
+    state.window = SDL_CreateWindow("SANDbox", width, height, 0);
+    if (!state.window) {
         SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
-    if (!renderer) {
+    state.renderer = SDL_CreateRenderer(state.window, NULL);
+    if (!state.renderer) {
         SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
-    CellType grid[ROWS][COLUMNS] = {0};
-    int current_type = 1;
+    clear_grid(state.grid);
+    state.current_type = 1;
 
-    bool running = true;
-    while (running) {
+    state.running = true;
+    while (state.running) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
-                running = false;
+                state.running = false;
             }
 
             if (event.type == SDL_EVENT_KEY_DOWN) {
                 SDL_Keycode key = event.key.key;
 
                 if (key == SDLK_1) {
-                    current_type = 1;
+                    state.current_type = 1;
                 } else if (key == SDLK_2) {
-                    current_type = 2;
+                    state.current_type = 2;
                 }
             }
 
@@ -64,19 +74,19 @@ int main(int argc, char *argv[]) {
                 int row = mouse_y / CELL_SIZE;
                 
                 if (row < ROWS && row >= 0 && col < COLUMNS && col >= 0) {
-                    if (current_type == 1) {
-                        grid[row][col] = WALL;
-                    } else if(current_type == 2) {
-                        grid[row][col] = SAND;
+                    if (state.current_type == 1) {
+                        state.grid[row][col] = WALL;
+                    } else if(state.current_type == 2) {
+                        state.grid[row][col] = SAND;
                     }
                 }
             }
         }
 
-        update_grid(grid);
+        update_grid(state.grid);
 
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(renderer);
+        SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(state.renderer);
         
 
         for (int row = 0; row < ROWS; row++) {
@@ -87,22 +97,22 @@ int main(int argc, char *argv[]) {
                 cell.w = CELL_SIZE;
                 cell.h = CELL_SIZE;
 
-                if (grid[row][col] == SAND) {
-                    SDL_SetRenderDrawColor(renderer, 255, 255, 0, SDL_ALPHA_OPAQUE);
-                } else if (grid[row][col] == WALL){
-                    SDL_SetRenderDrawColor(renderer, 120, 120, 120, SDL_ALPHA_OPAQUE);
-                } else if (grid[row][col] == AIR) {
-                    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+                if (state.grid[row][col] == SAND) {
+                    SDL_SetRenderDrawColor(state.renderer, 255, 255, 0, SDL_ALPHA_OPAQUE);
+                } else if (state.grid[row][col] == WALL){
+                    SDL_SetRenderDrawColor(state.renderer, 120, 120, 120, SDL_ALPHA_OPAQUE);
+                } else if (state.grid[row][col] == AIR) {
+                    SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
                 }
-                SDL_RenderFillRect(renderer, &cell);
+                SDL_RenderFillRect(state.renderer, &cell);
             }
         }
 
-        SDL_RenderPresent(renderer);
+        SDL_RenderPresent(state.renderer);
     }
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(state.renderer);
+    SDL_DestroyWindow(state.window);
     SDL_Quit();
     return 0;
 }
@@ -126,6 +136,14 @@ void update_grid(CellType grid[ROWS][COLUMNS]) {
                         grid[row][col] = AIR;
                 }
             }
+        }
+    }
+}
+
+void clear_grid(CellType grid[ROWS][COLUMNS]) {
+    for (int row = 0; row < ROWS; row++) {
+        for (int col = 0; col < COLUMNS; col++) {
+            grid[row][col] = AIR;
         }
     }
 }
